@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ShieldCheck, CheckCircle2, Lock, Search, CreditCard, LogOut, Calendar, Users, FileText, Plus } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Lock, CreditCard } from 'lucide-react';
 import './styles.css';
 
 function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [password, setPassword] = useState('');
-  const [activeTab, setActiveTab] = useState('applications');
   
   // Form State
   const [formData, setFormData] = useState({ fullName: '', email: '', phone: '' });
   const [submittedApp, setSubmittedApp] = useState(null);
 
-  // Mock Admin Data for Testing
+  // Applications list
   const [applications, setApplications] = useState([
     { id: 'GLG-2026-948123', full_name: 'Kofi Mensah', email: 'kofi@example.com', payment_status: 'paid', status: 'approved' },
     { id: 'GLG-2026-102938', full_name: 'Yaw Boateng', email: 'yaw@example.com', payment_status: 'pending', status: 'pending' }
@@ -47,20 +46,20 @@ function App() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
       {/* Header */}
-      <header className="bg-white border-b border-slate-100 py-4 px-6 flex items-center justify-between sticky top-0 z-50">
+      <header className="bg-white border-b border-slate-100 py-4 px-6 flex items-center justify-between sticky top-0 z-50 shadow-sm">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setIsAdmin(false)}>
           <ShieldCheck className="text-emerald-800" size={32} />
           <span className="font-bold text-lg text-slate-900 tracking-wide uppercase">Grand Lodge of Ghana</span>
         </div>
         <button
           onClick={() => setIsAdmin(!isAdmin)}
-          className="text-sm font-semibold text-emerald-800 border border-emerald-800 px-4 py-1.5 rounded-lg hover:bg-emerald-50 transition-colors"
+          className="text-sm font-semibold text-emerald-800 border border-emerald-800 px-4 py-2 rounded-lg hover:bg-emerald-50 transition-colors"
         >
           {isAdmin ? 'Exit Admin' : 'Admin Portal'}
         </button>
       </header>
 
-      <main className="p-4 max-w-5xl mx-auto my-6">
+      <main className="p-4 max-w-4xl mx-auto my-6">
         {!isAdmin ? (
           /* REGISTRATION VIEW */
           <div className="max-w-xl mx-auto bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
@@ -113,10 +112,7 @@ function App() {
         ) : (
           /* ADMIN DASHBOARD VIEW */
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-            {password !== 'admin123' && applications.length >= 0 && !isAdmin ? null : null}
-            
-            {/* If password not entered yet */}
-            {password !== 'admin123' && !window.bypassPass ? (
+            {password !== 'admin123' ? (
               <div className="max-w-md mx-auto my-12 text-center">
                 <div className="w-12 h-12 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Lock size={24} />
@@ -166,8 +162,8 @@ function App() {
                             </span>
                           </td>
                           <td className="py-3 px-4 flex gap-2">
-                            <button onClick={() => updateStatus(app.id, 'approved')} className="px-2 py-1 bg-emerald-800 text-white rounded text-xs">Approve</button>
-                            <button onClick={() => updateStatus(app.id, 'rejected')} className="px-2 py-1 bg-rose-600 text-white rounded text-xs">Reject</button>
+                            <button onClick={() => updateStatus(app.id, 'approved')} className="px-2.5 py-1 bg-emerald-800 text-white rounded text-xs">Approve</button>
+                            <button onClick={() => updateStatus(app.id, 'rejected')} className="px-2.5 py-1 bg-rose-600 text-white rounded text-xs">Reject</button>
                           </td>
                         </tr>
                       ))}
