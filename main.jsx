@@ -172,10 +172,11 @@ function AdminPage() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const handleLogin = (e) => {
+    const handleLogin = (e) => {
+      const handleLogin = (e) => {
     e.preventDefault();
-    if (password === 'admin123') { // Access password
-      setAuthenticated(true);
+    if (password === 'admin123') {
+      setSession({ user: { email: email || 'admin@grandlodge.org' } });
       fetchApplications();
     } else {
       alert('Incorrect Password');
