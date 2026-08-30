@@ -1,3 +1,166 @@
+import React, { useEffect, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { createClient } from '@supabase/supabase-js';
+import {
+  ShieldCheck, CheckCircle2, LockKeyhole, Search, CreditCard,
+  LogOut, Calendar, Users, FileText, Plus
+} from 'lucide-react';
+import './styles.css';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || import.meta.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const PAYSTACK_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+const REGISTRATION_FEE_GHS = 500;
+
+const supabase = SUPABASE_URL && SUPABASE_KEY ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+function RegisterPage() {
+  const [formData, setFormData] = useState({
+    fullName: '', email: '', phone: '', dob: '', occupation: '',
+    address: '', applicantType: 'Ghanaian', country: 'Ghana', message: ''
+  });
+  const [submittedApp, setSubmittedApp] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const appData = {
+      full_name: formData.fullName,
+      email: formData.email,
+      phone: formData.phone,
+      dob: formData.dob,
+      occupation: formData.occupation,
+      address: formData.address,
+      applicant_type: formData.applicantType,
+      country: formData.country,
+      message: formData.message,
+      payment_status: 'pending',
+      status: 'pending',
+      created_at: new Date().toISOString()
+    };
+
+    if (supabase) {
+      const { data, error } = await supabase.from('applications').insert([appData]).select();
+      if (!error && data && data[0]) {
+        setSubmittedApp(data[0]);
+      } else {
+        setSubmittedApp({ id: 'GLG-2026-' + Math.floor(100000 + Math.random() * 900000), ...appData });
+      }
+    } else {
+      setSubmittedApp({ id: 'GLG-2026-' + Math.floor(100000 + Math.random() * 900000), ...appData });
+    }
+    setLoading(false);
+  };
+
+  const handlePaystackPayment = () => {
+    if (!window.PaystackPop) {
+      alert('Paystack SDK failed to load. Please refresh.');
+      return;
+    }
+    const handler = window.PaystackPop.setup({
+      key: PAYSTACK_KEY,
+      email: submittedApp.email,
+      amount: REGISTRATION_FEE_GHS * 100,
+      currency: 'GHS',
+      ref: '' + Math.floor(Math.random() * 1000000000 + 1),
+      callback: async (response) => {
+        if (supabase && submittedApp.id) {
+          await supabase.from('applications').update({
+            payment_status: 'paid',
+            status: 'approved',
+            paystack_reference: response.reference
+          }).eq('id', submittedApp.id);
+        }
+        alert('Payment Successful!');
+        window.location.href = '/status';
+      },
+      onClose: () => {
+        alert('Transaction cancelled.');
+      }
+    });
+    handler.openIframe();
+  };
+
+  if (submittedApp) {
+    return (
+      <div className="max-w-xl mx-auto my-12 p-8 bg-white rounded-2xl shadow-sm border border-slate-100 text-center">
+        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+          <CheckCircle2 size={36} />
+        </div>
+        <h2 className="text-3xl font-bold text-slate-900 mb-2">Application received</h2>
+        <p className="text-slate-600 mb-6">Your registration has been submitted successfully.</p>
+        
+        <div className="bg-slate-50 p-4 rounded-xl mb-6">
+          <span className="text-sm text-slate-500 block mb-1">Application ID</span>
+          <span className="text-xl font-bold text-emerald-800">{submittedApp.id}</span>
+        </div>
+
+        <p className="text-sm text-slate-600 mb-6">
+          A registration fee of <strong>₵{REGISTRATION_FEE_GHS}</strong> is required. Without payment your application will remain <strong>rejected / unapproved</strong>.
+        </p>
+
+        <button
+          onClick={handlePaystackPayment}
+          className="w-full py-3.5 px-6 rounded-xl bg-emerald-800 text-white font-medium hover:bg-emerald-900 transition-colors flex items-center justify-center gap-2 shadow-md mb-4"
+        >
+          <CreditCard size={20} />
+          Pay ₵{REGISTRATION_FEE_GHS} with Paystack
+        </button>
+
+        <p className="text-xs text-slate-500">
+          After successful payment you will be redirected to your application dashboard.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto my-8 p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
+      <h2 className="text-2xl font-bold text-slate-900 mb-6">Applicant Registration</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+          <input
+            type="text" required
+            value={formData.fullName}
+            onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 focus:border-emerald-800"
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+            <input
+              type="email" required
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 focus:border-emerald-800"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
+            <input
+              type="tel" required
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 focus:border-emerald-800"
+            />
+          </div>
+        </div>
+        <button
+          type="submit" disabled={loading}
+          className="w-full py-3 px-6 rounded-xl bg-emerald-800 text-white font-medium hover:bg-emerald-900 transition-colors mt-4"
+        >
+          {loading ? 'Submitting...' : 'Proceed to Payment'}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [password, setPassword] = useState('');
@@ -180,40 +343,4 @@ function AdminPage() {
             {initiationList.map(candidate => (
               <div key={candidate.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
                 <div>
-                  <h4 className="font-bold text-slate-900">{candidate.full_name}</h4>
-                  <p className="text-xs text-slate-500">ID: {candidate.id} | {candidate.email}</p>
-                </div>
-                <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-semibold rounded-full text-xs">Ready for Initiation</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'events' && (
-        <div className="space-y-6">
-          <form onSubmit={handleAddEvent} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
-            <h4 className="font-bold text-slate-900">Add New Lodge Event</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <input type="text" placeholder="Event Title" value={newEvent.title} onChange={e => setNewEvent({ ...newEvent, title: e.target.value })} className="px-4 py-2 border rounded-lg" required />
-              <input type="date" value={newEvent.date} onChange={e => setNewEvent({ ...newEvent, date: e.target.value })} className="px-4 py-2 border rounded-lg" required />
-              <input type="text" placeholder="Location" value={newEvent.location} onChange={e => setNewEvent({ ...newEvent, location: e.target.value })} className="px-4 py-2 border rounded-lg" />
-            </div>
-            <button type="submit" className="px-4 py-2 bg-emerald-800 text-white rounded-lg text-sm flex items-center gap-2"><Plus size={16} /> Publish Event</button>
-          </form>
-
-          <div className="space-y-3">
-            {events.map(ev => (
-              <div key={ev.id} className="p-4 border rounded-xl flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-slate-900">{ev.title}</h4>
-                  <p className="text-xs text-slate-500">{ev.date} — {ev.location || 'Main Lodge Hall'}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+                  <h4 className="font-bold text
