@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { createClient } from '@supabase/supabase-js';
 import {
-  ShieldCheck, CheckCircle2, LockKeyhole, Search, CreditCard,
-  LogOut, Calendar, Users, FileText, Plus
+  ShieldCheck, CheckCircle2, Lock, Search, CreditCard,
+  LogOut, Calendar, Users, FileText, Plus, Menu, X
 } from 'lucide-react';
 import './styles.css';
 
@@ -75,7 +75,7 @@ function RegisterPage() {
           }).eq('id', submittedApp.id);
         }
         alert('Payment Successful!');
-        window.location.href = '/status';
+        window.location.href = '/admin';
       },
       onClose: () => {
         alert('Transaction cancelled.');
@@ -99,7 +99,7 @@ function RegisterPage() {
         </div>
 
         <p className="text-sm text-slate-600 mb-6">
-          A registration fee of <strong>₵{REGISTRATION_FEE_GHS}</strong> is required. Without payment your application will remain <strong>rejected / unapproved</strong>.
+          A registration fee of <strong>₵{REGISTRATION_FEE_GHS}</strong> is required.
         </p>
 
         <button
@@ -109,10 +109,6 @@ function RegisterPage() {
           <CreditCard size={20} />
           Pay ₵{REGISTRATION_FEE_GHS} with Paystack
         </button>
-
-        <p className="text-xs text-slate-500">
-          After successful payment you will be redirected to your application dashboard.
-        </p>
       </div>
     );
   }
@@ -127,7 +123,7 @@ function RegisterPage() {
             type="text" required
             value={formData.fullName}
             onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 focus:border-emerald-800"
+            className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-800/20"
           />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -137,7 +133,7 @@ function RegisterPage() {
               type="email" required
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 focus:border-emerald-800"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-800/20"
             />
           </div>
           <div>
@@ -146,7 +142,7 @@ function RegisterPage() {
               type="tel" required
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-800/20 focus:border-emerald-800"
+              className="w-full px-4 py-2.5 rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-800/20"
             />
           </div>
         </div>
@@ -214,13 +210,13 @@ function AdminPage() {
 
   if (!isLoggedIn) {
     return (
-      <div className="max-w-md mx-auto my-16 p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
+      <div className="max-w-md mx-auto my-16 p-6 bg-white rounded-2xl shadow-sm border border-slate-100 text-center">
         <div className="w-12 h-12 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center mx-auto mb-4">
-          <LockKeyhole size={24} />
+          <Lock size={24} />
         </div>
-        <h2 className="text-xl font-bold text-center text-slate-900 mb-1">Staff Access</h2>
-        <p className="text-xs text-center text-slate-500 mb-6">Enter passcode to view dashboard</p>
-        <form onSubmit={handleLogin} className="space-y-4">
+        <h2 className="text-xl font-bold text-slate-900 mb-1">Staff Dashboard Access</h2>
+        <p className="text-xs text-slate-500 mb-6">Enter admin passcode</p>
+        <form onSubmit={handleLogin} className="space-y-4 text-left">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Passcode</label>
             <input
@@ -244,10 +240,10 @@ function AdminPage() {
 
   return (
     <div className="max-w-6xl mx-auto my-8 p-6 bg-white rounded-2xl shadow-sm border border-slate-100">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 pb-6 border-b border-slate-100">
+      <div className="flex items-center justify-between gap-4 pb-6 border-b border-slate-100">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Admin Management Portal</h2>
-          <p className="text-sm text-slate-500">Grand Lodge of Ghana Admin</p>
+          <p className="text-sm text-slate-500">Grand Lodge of Ghana</p>
         </div>
         <button
           onClick={() => setIsLoggedIn(false)}
@@ -257,10 +253,10 @@ function AdminPage() {
         </button>
       </div>
 
-      <div className="flex gap-2 my-6 border-b border-slate-100">
+      <div className="flex gap-2 my-6 border-b border-slate-100 overflow-x-auto">
         <button
           onClick={() => setActiveTab('applications')}
-          className={`flex items-center gap-2 pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+          className={`flex items-center gap-2 pb-3 px-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
             activeTab === 'applications' ? 'border-emerald-800 text-emerald-800' : 'border-transparent text-slate-500'
           }`}
         >
@@ -268,7 +264,7 @@ function AdminPage() {
         </button>
         <button
           onClick={() => setActiveTab('initiation')}
-          className={`flex items-center gap-2 pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+          className={`flex items-center gap-2 pb-3 px-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
             activeTab === 'initiation' ? 'border-emerald-800 text-emerald-800' : 'border-transparent text-slate-500'
           }`}
         >
@@ -276,7 +272,7 @@ function AdminPage() {
         </button>
         <button
           onClick={() => setActiveTab('events')}
-          className={`flex items-center gap-2 pb-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+          className={`flex items-center gap-2 pb-3 px-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
             activeTab === 'events' ? 'border-emerald-800 text-emerald-800' : 'border-transparent text-slate-500'
           }`}
         >
@@ -343,4 +339,92 @@ function AdminPage() {
             {initiationList.map(candidate => (
               <div key={candidate.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
                 <div>
-                  <h4 className="font-bold text
+                  <h4 className="font-bold text-slate-900">{candidate.full_name}</h4>
+                  <p className="text-xs text-slate-500">ID: {candidate.id} | {candidate.email}</p>
+                </div>
+                <span className="px-3 py-1 bg-emerald-100 text-emerald-800 font-semibold rounded-full text-xs">Ready for Initiation</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'events' && (
+        <div className="space-y-6">
+          <form onSubmit={handleAddEvent} className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-4">
+            <h4 className="font-bold text-slate-900">Add New Lodge Event</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <input type="text" placeholder="Event Title" value={newEvent.title} onChange={e => setNewEvent({ ...newEvent, title: e.target.value })} className="px-4 py-2 border rounded-lg" required />
+              <input type="date" value={newEvent.date} onChange={e => setNewEvent({ ...newEvent, date: e.target.value })} className="px-4 py-2 border rounded-lg" required />
+              <input type="text" placeholder="Location" value={newEvent.location} onChange={e => setNewEvent({ ...newEvent, location: e.target.value })} className="px-4 py-2 border rounded-lg" />
+            </div>
+            <button type="submit" className="px-4 py-2 bg-emerald-800 text-white rounded-lg text-sm flex items-center gap-2"><Plus size={16} /> Publish Event</button>
+          </form>
+
+          <div className="space-y-3">
+            {events.map(ev => (
+              <div key={ev.id} className="p-4 border rounded-xl flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-slate-900">{ev.title}</h4>
+                  <p className="text-xs text-slate-500">{ev.date} — {ev.location || 'Main Lodge Hall'}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MainApp() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-800 relative">
+      <header className="bg-white border-b border-slate-100 py-4 px-6 flex items-center justify-between sticky top-0 z-50">
+        <Link to="/" onClick={() => setMenuOpen(false)} className="flex items-center gap-3">
+          <ShieldCheck className="text-emerald-800" size={32} />
+          <span className="font-bold text-lg text-slate-900 tracking-wide uppercase">Grand Lodge of Ghana</span>
+        </Link>
+        <div className="hidden md:flex items-center gap-6">
+          <Link to="/" className="text-sm text-slate-600 hover:text-emerald-800">Home</Link>
+          <Link to="/register" className="text-sm text-slate-600 hover:text-emerald-800">Apply Now</Link>
+          <Link to="/admin" className="text-sm font-semibold text-emerald-800 border border-emerald-800 px-3 py-1.5 rounded-lg hover:bg-emerald-50">Admin Portal</Link>
+        </div>
+        <button className="md:hidden text-slate-700" onClick={() => setMenuOpen(!menuOpen)}>
+          {menuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </header>
+
+      {menuOpen && (
+        <div className="fixed inset-0 top-[65px] bg-white z-40 p-6 flex flex-col gap-4 border-b shadow-lg">
+          <Link to="/" onClick={() => setMenuOpen(false)} className="text-lg font-medium text-slate-800 py-2 border-b">Home</Link>
+          <Link to="/register" onClick={() => setMenuOpen(false)} className="text-lg font-medium text-slate-800 py-2 border-b">Apply Now</Link>
+          <Link to="/admin" onClick={() => setMenuOpen(false)} className="w-full py-3 bg-emerald-800 text-white text-center font-bold rounded-xl mt-4">
+            Go to Admin Dashboard
+          </Link>
+        </div>
+      )}
+
+      <main className="p-4">
+        <Routes>
+          <Route path="/" element={<RegisterPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
+
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  createRoot(rootElement).render(
+    <React.StrictMode>
+      <BrowserRouter>
+        <MainApp />
+      </BrowserRouter>
+    </React.StrictMode>
+  );
+}
